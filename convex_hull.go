@@ -50,7 +50,6 @@ func ConvexHull(points []Point) []Point {
 
 	endPt := points[0]
 	for {
-		// convexHull = append(convexHull, hullPt.Clone())
 		convexHull = append(convexHull, hullPt)
 
 		for _, p := range points[1:] {

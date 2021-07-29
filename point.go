@@ -4,10 +4,6 @@ import "math"
 
 type Point [2]float64
 
-func (p Point) Clone() Point {
-	return Point{p[0], p[1]}
-}
-
 func (p Point) Mul(m float64) Point {
 	return Point{m * p[0], m * p[1]}
 }
