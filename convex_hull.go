@@ -3,18 +3,21 @@ package ombb
 import "math"
 
 const (
-	on          = 0
-	left        = 1
-	right       = 2
-	almost_zero = 0.00001
+	on    = 0
+	left  = 1
+	right = 2
 )
 
-func getSideOfLine(lineStart, lineEnd, point Point) int {
+const (
+	defaultAlmostZero = 0.00001
+)
+
+func getSideOfLine(lineStart, lineEnd, point Point, almostZero float64) int {
 	d := (lineEnd[0]-lineStart[0])*(point[1]-lineStart[1]) - (lineEnd[1]-lineStart[1])*(point[0]-lineStart[0])
 	switch {
-	case d > almost_zero:
+	case d > almostZero:
 		return left
-	case d < -almost_zero:
+	case d < -almostZero:
 		return right
 	default:
 		return on
@@ -30,9 +33,14 @@ func reversePoints(points []Point) []Point {
 	return result
 }
 
-func ConvexHull(points []Point) []Point {
+func ConvexHull(points []Point, precision ...float64) []Point {
 	if len(points) < 3 {
 		return points
+	}
+
+	almostZero := defaultAlmostZero
+	if len(precision) > 0 {
+		almostZero = precision[0]
 	}
 
 	hullPt := points[0]
@@ -41,7 +49,7 @@ func ConvexHull(points []Point) []Point {
 	for _, p := range points {
 		if p[0] < hullPt[0] {
 			hullPt = p
-		} else if math.Abs(p[0]-hullPt[0]) < almost_zero {
+		} else if math.Abs(p[0]-hullPt[0]) < almostZero {
 			if p[1] < hullPt[1] {
 				hullPt = p
 			}
@@ -53,7 +61,7 @@ func ConvexHull(points []Point) []Point {
 		convexHull = append(convexHull, hullPt)
 
 		for _, p := range points[1:] {
-			side := getSideOfLine(hullPt, endPt, p)
+			side := getSideOfLine(hullPt, endPt, p, almostZero)
 
 			// in case point lies on line take the one further away.
 			// this fixes the collinearity problem.
