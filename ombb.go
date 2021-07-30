@@ -7,8 +7,8 @@ type ombbContext struct {
 	bestObbArea float64
 }
 
-func Ombb(points []Point, precision ...float64) [4]Point {
-	convexHull := ConvexHull(points, precision...)
+func Ombb(points []Point) [4]Point {
+	convexHull := ConvexHull(points)
 	ctx := &ombbContext{}
 	return ctx.calcOmbb(convexHull)
 }

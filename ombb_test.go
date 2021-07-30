@@ -42,9 +42,10 @@ func TestOmbb(t *testing.T) {
 		{364.37931034482756, 50.94827586206896},
 		{117.91379310344828, 149.5344827586207},
 	}
+	delta := 1e-6
 	for i := range obb {
-		if !obb[i].AlmostEquals(expected[i], defaultAlmostZero) {
-			t.Fatalf("Ombb()[%d], got %v, want %v", i, obb[i], expected[i])
+		if !obb[i].AlmostEquals(expected[i], delta) {
+			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
 		}
 	}
 }
@@ -101,17 +102,17 @@ func TestOmbbForLonLat(t *testing.T) {
 		{114.2666743, 30.599377500000003},
 		{114.26671390000001, 30.599383600000003},
 	}
-	precision := 1e-7
-	obb := Ombb(points, precision)
+	obb := Ombb(points)
 	expected := [4]Point{
-		{114.26645828635931, 30.5998805527373},
-		{114.26662820000001, 30.599412200000003},
-		{114.26790630805525, 30.599875884688032},
-		{114.26773639441454, 30.60034423742533},
+         {114.26644160929216, 30.599808423170842},
+         {114.26668317932754, 30.59929545204542},
+         {114.26800051032242, 30.599915813853883},
+         {114.26775894028702, 30.600428784979307},
 	}
+	delta := 1e-6
 	for i := range obb {
-		if !obb[i].AlmostEquals(expected[i], precision) {
-			t.Fatalf("Ombb()[%d], got %v, want %v", i, obb[i], expected[i])
+		if !obb[i].AlmostEquals(expected[i], delta) {
+			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
 		}
 	}
 }
