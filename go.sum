@@ -1,0 +1,4 @@
+github.com/golang/geo v0.0.0-20180826223333-635502111454 h1:UiKw4ZsXdOM6qRj2nP54DJY6Mp3Vd+aSu1OhPvPR+94=
+github.com/golang/geo v0.0.0-20180826223333-635502111454/go.mod h1:vgWZ7cu0fq0KY3PpEHsocXOWJpRtkcbKemU4IUw0M60=
+github.com/markus-wa/quickhull-go/v2 v2.2.0 h1:rB99NLYeUHoZQ/aNRcGOGqjNBGmrOaRxdtqTnsTUPTA=
+github.com/markus-wa/quickhull-go/v2 v2.2.0/go.mod h1:EuLMucfr4B+62eipXm335hOs23LTnO62W7Psn3qvU2k=
