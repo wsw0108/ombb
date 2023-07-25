@@ -5,6 +5,7 @@ import (
 
 	r3 "github.com/golang/geo/r3"
 	"github.com/markus-wa/quickhull-go/v2"
+	"github.com/wsw0108/concaveman-go"
 )
 
 var pointsNormal = []Point{
@@ -46,6 +47,19 @@ func convexHullQuickHull(points []Point) []Point {
 	return result
 }
 
+func convexHullConcaveman(points []Point) []Point {
+	var pointsR3 []concaveman.Point
+	for _, p := range points {
+		pointsR3 = append(pointsR3, concaveman.Point{p[0], p[1]})
+	}
+	hull := concaveman.Concaveman(pointsR3)
+	var result []Point
+	for _, v := range hull {
+		result = append(result, Point{v[0], v[1]})
+	}
+	return result
+}
+
 func TestOmbb(t *testing.T) {
 	diff := Point{250, 1050}
 	points := make([]Point, len(pointsNormal))
@@ -70,7 +84,34 @@ func TestOmbb(t *testing.T) {
 }
 
 func TestOmbbQuickHull(t *testing.T) {
-	t.Skip()
+	// t.Skip()
+	diff := Point{250, 1050}
+	points := make([]Point, len(pointsNormal))
+	copy(points, pointsNormal)
+	for i := range points {
+		points[i] = points[i].Mul(1.5)
+		points[i] = points[i].Diff(diff)
+	}
+	opts := Options{
+		ConvexHull: convexHullQuickHull,
+	}
+	obb := Ombb(points, opts)
+	expected := [4]Point{
+		{41.36206896551724, -41.84482758620689},
+		{287.82758620689657, -140.4310344827586},
+		{364.37931034482756, 50.94827586206896},
+		{117.91379310344828, 149.5344827586207},
+	}
+	delta := 1e-6
+	for i := range obb {
+		if !obb[i].AlmostEquals(expected[i], delta) {
+			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
+		}
+	}
+}
+
+func TestOmbbConcaveman(t *testing.T) {
+	// t.Skip()
 	diff := Point{250, 1050}
 	points := make([]Point, len(pointsNormal))
 	copy(points, pointsNormal)
