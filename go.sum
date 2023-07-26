@@ -6,3 +6,5 @@ github.com/tidwall/tinyqueue v0.1.1 h1:SpNEvEggbpyN5DIReaJ2/1ndroY8iyEGxPYxoSaym
 github.com/tidwall/tinyqueue v0.1.1/go.mod h1:O/QNHwrnjqr6IHItYrzoHAKYhBkLI67Q096fQP5zMYw=
 github.com/wsw0108/concaveman-go v0.1.1 h1:Bo7i2kxqZJtW/BuU7ko81a9U4gtgTDR4x9KTafHsJE0=
 github.com/wsw0108/concaveman-go v0.1.1/go.mod h1:6ZAeelw/d18g5wnXo7YV5F7YjbJbaVa4WzvF4ffwMeU=
+github.com/wsw0108/sphericalmercator-go v0.1.0 h1:Cr7qsOVkI2dw9SO4UKvXBUiLi3MRX8Ex4FYaWvrKpew=
+github.com/wsw0108/sphericalmercator-go v0.1.0/go.mod h1:nwLN4Ty5Euc2FKPNCja2UtfOkbxMXEKiLRu93sxIKoI=
