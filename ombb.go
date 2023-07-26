@@ -7,8 +7,14 @@ type ombbContext struct {
 	bestObbArea float64
 }
 
+type (
+	ConvexHullFunc func(points []Point) []Point
+	TransformFunc  func(points Point, inverse bool) Point
+)
+
 type Options struct {
-	ConvexHull func([]Point) []Point
+	ConvexHull ConvexHullFunc
+	Transform  TransformFunc
 }
 
 func Ombb(points []Point, opts ...Options) [4]Point {
@@ -18,9 +24,27 @@ func Ombb(points []Point, opts ...Options) [4]Point {
 	if len(opts) > 0 {
 		opt = opts[0]
 	}
-	convexHull := opt.ConvexHull(points)
+	if opt.ConvexHull == nil {
+		opt.ConvexHull = ConvexHull
+	}
+	var convexHull []Point
+	if opt.Transform != nil {
+		transformed := make([]Point, len(points))
+		for i, p := range points {
+			transformed[i] = opt.Transform(p, false)
+		}
+		convexHull = opt.ConvexHull(transformed)
+	} else {
+		convexHull = opt.ConvexHull(points)
+	}
 	ctx := &ombbContext{}
-	return ctx.calcOmbb(convexHull)
+	obb := ctx.calcOmbb(convexHull)
+	if opt.Transform != nil {
+		for i, p := range obb {
+			obb[i] = opt.Transform(p, true)
+		}
+	}
+	return obb
 }
 
 func intersectLines(start0, dir0, start1, dir1 Point) Point {

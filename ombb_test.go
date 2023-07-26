@@ -1,11 +1,13 @@
 package ombb
 
 import (
+	"reflect"
 	"testing"
 
 	r3 "github.com/golang/geo/r3"
 	"github.com/markus-wa/quickhull-go/v2"
 	"github.com/wsw0108/concaveman-go"
+	"github.com/wsw0108/sphericalmercator-go"
 )
 
 var pointsNormal = []Point{
@@ -34,30 +36,26 @@ var pointsNormal = []Point{
 	{266, 757},
 }
 
-func convexHullQuickHull(points []Point) []Point {
-	var pointsR3 []r3.Vector
-	for _, p := range points {
-		pointsR3 = append(pointsR3, r3.Vector{X: p[0], Y: p[1], Z: 0})
+func TestConvexHull(t *testing.T) {
+	diff := Point{250, 1050}
+	points := make([]Point, len(pointsNormal))
+	copy(points, pointsNormal)
+	for i := range points {
+		points[i] = points[i].Mul(1.5)
+		points[i] = points[i].Diff(diff)
 	}
-	hull := new(quickhull.QuickHull).ConvexHull(pointsR3, false, true, 0)
-	var result []Point
-	for _, v := range hull.Vertices {
-		result = append(result, Point{v.X, v.Y})
+	hull := ConvexHull(points)
+	expected := []Point{
+		{165.5, -91.5},
+		{270.5, -133.5},
+		{350, 15},
+		{285.5, 82.5},
+		{102.5, 111},
+		{95, 15},
 	}
-	return result
-}
-
-func convexHullConcaveman(points []Point) []Point {
-	var pointsR3 []concaveman.Point
-	for _, p := range points {
-		pointsR3 = append(pointsR3, concaveman.Point{p[0], p[1]})
+	if !reflect.DeepEqual(hull, expected) {
+		t.Error("TestConvexHull")
 	}
-	hull := concaveman.Concaveman(pointsR3)
-	var result []Point
-	for _, v := range hull {
-		result = append(result, Point{v[0], v[1]})
-	}
-	return result
 }
 
 func TestOmbb(t *testing.T) {
@@ -69,60 +67,6 @@ func TestOmbb(t *testing.T) {
 		points[i] = points[i].Diff(diff)
 	}
 	obb := Ombb(points)
-	expected := [4]Point{
-		{41.36206896551724, -41.84482758620689},
-		{287.82758620689657, -140.4310344827586},
-		{364.37931034482756, 50.94827586206896},
-		{117.91379310344828, 149.5344827586207},
-	}
-	delta := 1e-6
-	for i := range obb {
-		if !obb[i].AlmostEquals(expected[i], delta) {
-			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
-		}
-	}
-}
-
-func TestOmbbQuickHull(t *testing.T) {
-	// t.Skip()
-	diff := Point{250, 1050}
-	points := make([]Point, len(pointsNormal))
-	copy(points, pointsNormal)
-	for i := range points {
-		points[i] = points[i].Mul(1.5)
-		points[i] = points[i].Diff(diff)
-	}
-	opts := Options{
-		ConvexHull: convexHullQuickHull,
-	}
-	obb := Ombb(points, opts)
-	expected := [4]Point{
-		{41.36206896551724, -41.84482758620689},
-		{287.82758620689657, -140.4310344827586},
-		{364.37931034482756, 50.94827586206896},
-		{117.91379310344828, 149.5344827586207},
-	}
-	delta := 1e-6
-	for i := range obb {
-		if !obb[i].AlmostEquals(expected[i], delta) {
-			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
-		}
-	}
-}
-
-func TestOmbbConcaveman(t *testing.T) {
-	// t.Skip()
-	diff := Point{250, 1050}
-	points := make([]Point, len(pointsNormal))
-	copy(points, pointsNormal)
-	for i := range points {
-		points[i] = points[i].Mul(1.5)
-		points[i] = points[i].Diff(diff)
-	}
-	opts := Options{
-		ConvexHull: convexHullQuickHull,
-	}
-	obb := Ombb(points, opts)
 	expected := [4]Point{
 		{41.36206896551724, -41.84482758620689},
 		{287.82758620689657, -140.4310344827586},
@@ -189,38 +133,109 @@ var pointsLonLat = []Point{
 	{114.26671390000001, 30.599383600000003},
 }
 
+var transformerMercator = func(p Point, inverse bool) Point {
+	mercator := sphericalmercator.New()
+	var v []float64
+	if !inverse {
+		v = mercator.Forward(p[:])
+	} else {
+		v = mercator.Inverse(p[:])
+	}
+	return Point{v[0], v[1]}
+}
+
 func TestOmbbForLonLat(t *testing.T) {
-	obb := Ombb(pointsLonLat)
+	opt := Options{
+		Transform: transformerMercator,
+	}
+	obb := Ombb(pointsLonLat, opt)
 	expected := [4]Point{
-		{114.26644160929216, 30.599808423170842},
-		{114.26668317932754, 30.59929545204542},
-		{114.26800051032242, 30.599915813853883},
-		{114.26775894028702, 30.600428784979307},
+		{114.26639138410215, 30.599784771864584},
+		{114.26669797832271, 30.599302420611224},
+		{114.26801133406653, 30.599920910685253},
+		{114.26770473984595, 30.600403258859338},
 	}
 	delta := 1e-6
 	for i := range obb {
 		if !obb[i].AlmostEquals(expected[i], delta) {
-			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
+			t.Fatalf("OmbbForLonLat(), got %v, want %v", obb, expected)
 		}
 	}
 }
 
-func TestOmbbForLonLatQuickHull(t *testing.T) {
+func convexHullQuickHull(points []Point) []Point {
+	var pointsR3 []r3.Vector
+	for _, p := range points {
+		pointsR3 = append(pointsR3, r3.Vector{X: p[0], Y: p[1], Z: 0})
+	}
+	hull := new(quickhull.QuickHull).ConvexHull(pointsR3, false, true, 0)
+	var result []Point
+	for _, v := range hull.Vertices {
+		result = append(result, Point{v.X, v.Y})
+	}
+	return result
+}
+
+func convexHullConcaveman(points []Point) []Point {
+	var points2 []concaveman.Point
+	for _, p := range points {
+		points2 = append(points2, concaveman.Point{p[0], p[1]})
+	}
+	hull := concaveman.Concaveman(points2)
+	var result []Point
+	for _, v := range hull {
+		result = append(result, Point{v[0], v[1]})
+	}
+	return result
+}
+
+func TestConvexHullCompare(t *testing.T) {
 	t.Skip()
-	opts := Options{
-		ConvexHull: convexHullQuickHull,
+	diff := Point{250, 1050}
+	points := make([]Point, len(pointsNormal))
+	copy(points, pointsNormal)
+	for i := range points {
+		points[i] = points[i].Mul(1.5)
+		points[i] = points[i].Diff(diff)
 	}
-	obb := Ombb(pointsLonLat, opts)
-	expected := [4]Point{
-		{114.26644160929216, 30.599808423170842},
-		{114.26668317932754, 30.59929545204542},
-		{114.26800051032242, 30.599915813853883},
-		{114.26775894028702, 30.600428784979307},
+	expected := []Point{
+		{165.5, -91.5},
+		{270.5, -133.5},
+		{350, 15},
+		{285.5, 82.5},
+		{102.5, 111},
+		{95, 15},
 	}
-	delta := 1e-6
-	for i := range obb {
-		if !obb[i].AlmostEquals(expected[i], delta) {
-			t.Fatalf("Ombb(), got %v, want %v", obb, expected)
-		}
+	type args struct {
+		convexHullFn ConvexHullFunc
+		points       []Point
+	}
+	tests := []struct {
+		name string
+		args args
+		want []Point
+	}{
+		{
+			name: "ConvexHull",
+			args: args{convexHullFn: ConvexHull, points: points},
+			want: expected,
+		},
+		{
+			name: "QuickHull",
+			args: args{convexHullFn: convexHullQuickHull, points: points},
+			want: expected,
+		},
+		{
+			name: "Concaveman",
+			args: args{convexHullFn: convexHullConcaveman, points: points},
+			want: expected,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.args.convexHullFn(tt.args.points); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ConvexHull() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
