@@ -1,9 +1,11 @@
 package ombb
 
 import (
+	"image/color"
 	"reflect"
 	"testing"
 
+	"github.com/fogleman/gg"
 	r3 "github.com/golang/geo/r3"
 	"github.com/markus-wa/quickhull-go/v2"
 	"github.com/wsw0108/concaveman-go"
@@ -237,5 +239,64 @@ func TestConvexHullCompare(t *testing.T) {
 				t.Errorf("ConvexHull() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDrawConvexHull(t *testing.T) {
+	diff := Point{250, 1050}
+	points := make([]Point, len(pointsNormal))
+	copy(points, pointsNormal)
+	for i := range points {
+		points[i] = points[i].Mul(1.5)
+		points[i] = points[i].Diff(diff)
+	}
+	off := Point{0, 200}
+	drawLine := func(dc *gg.Context, p1, p2 Point) {
+		dc.DrawLine(p1[0]+off[0], p1[1]+off[1], p2[0]+off[0], p2[1]+off[1])
+	}
+	output := func(dc *gg.Context, hull []Point, filename string) error {
+		{
+			dc.SetColor(color.RGBA{0, 0, 0, 255})
+			p1 := points[len(points)-1]
+			for _, p2 := range points {
+				drawLine(dc, p1, p2)
+				p1 = p2
+			}
+			dc.Stroke()
+		}
+		{
+			dc.SetColor(color.RGBA{255, 0, 0, 255})
+			p1 := hull[len(hull)-1]
+			for _, p2 := range hull {
+				drawLine(dc, p1, p2)
+				p1 = p2
+			}
+			dc.Stroke()
+		}
+		return dc.SavePNG(filename)
+	}
+	{
+		dc := gg.NewContext(800, 600)
+		hull := ConvexHull(points)
+		err := output(dc, hull, "output-hull-default.png")
+		if err != nil {
+			panic(err)
+		}
+	}
+	{
+		dc := gg.NewContext(800, 600)
+		hull := convexHullQuickHull(points)
+		err := output(dc, hull, "output-hull-quickhull.png")
+		if err != nil {
+			panic(err)
+		}
+	}
+	{
+		dc := gg.NewContext(800, 600)
+		hull := convexHullConcaveman(points)
+		err := output(dc, hull, "output-hull-concaveman.png")
+		if err != nil {
+			panic(err)
+		}
 	}
 }
